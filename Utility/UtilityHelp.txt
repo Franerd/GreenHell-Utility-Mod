@@ -1,0 +1,93 @@
+UTILITY MOD — HELP
+
+Commands:
+Help
+FinishNearest
+ClearArea
+ClearPlants
+CollectNearby
+
+
+Command Usage:
+
+utility
+Exibe esta ajuda no console.
+
+utility Help
+Exibe esta ajuda no console.
+
+utility FinishNearest [distance]
+Conclui a construção incompleta mais próxima dentro da distância informada.
+
+Exemplo:
+utility FinishNearest 10
+
+utility ClearArea [distance]
+Remove objetos compatíveis encontrados ao redor do jogador dentro da distância informada.
+
+Exemplo:
+utility ClearArea 10
+
+utility ClearPlants [distance]
+Remove plantas encontradas ao redor do jogador dentro da distância informada.
+
+Exemplo:
+utility ClearPlants 15
+
+utility CollectNearby [ItemID] [distance] [pile|line]
+Move para perto do jogador somente um tipo de item permitido.
+
+O modo pile é usado por padrão quando nenhum modo é informado.
+
+Exemplos:
+utility CollectNearby Stick 20
+utility CollectNearby Stick 20 pile
+utility CollectNearby Stick 20 line
+
+
+Safe ItemIDs:
+
+Long_Stick
+Stick
+Small_Stick
+Log
+Stone
+Big_Stone
+Palm_Leaf
+Banana_Leaf
+Bamboo_Long_Stick
+Bamboo_Stick
+Bamboo_Log
+Coconut_Green
+Dry_leaf
+Small_leaf_pile
+Liane
+Dryed_Liane
+mud_to_build
+mud_from_water
+Rope
+Fiber
+Wood_Resin
+Charcoal
+Bone
+
+
+CollectNearby Modes:
+
+pile
+Organiza os objetos em uma pilha compacta com espaçamento ajustado para reduzir colisões físicas.
+
+line
+Organiza os objetos em linhas.
+
+
+Safety Notes:
+
+- A função all não existe neste mod.
+- CollectNearby exige um ItemID individual.
+- Somente os ItemIDs listados em Safe ItemIDs são aceitos.
+- Outros ItemIDs do Green Hell são recusados, mesmo que existam no jogo.
+- CollectNearby move objetos existentes; não cria novos objetos.
+- Itens presos a construções, inventários ou sistemas especiais podem não ser movidos.
+- Quantidades muito grandes ainda podem causar queda de desempenho ou instabilidade física.
+- Os comandos não diferenciam letras maiúsculas de minúsculas.

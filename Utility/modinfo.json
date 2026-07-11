@@ -1,0 +1,12 @@
+{
+  "name": "Utility",
+  "author": "FraNerd",
+  "description": "Safe area collection, cleanup and construction utility commands for Green Hell.",
+  "version": "2.0.0",
+  "license": "GNU AGPLv3",
+  "icon": "icon.png",
+  "banner": "banner.jpg",
+  "gameVersion": "1.0",
+  "isModPermanent": false,
+  "excludedFiles": []
+}
