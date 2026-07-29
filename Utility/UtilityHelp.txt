@@ -2,50 +2,99 @@ UTILITY MOD — HELP
 
 Commands:
 Help
+Nearby
 FinishNearest
 ClearArea
 ClearPlants
-CollectNearby
+Cluster
+Repair
+SlowSleep
 
 
 Command Usage:
 
-utility
+to
 Exibe esta ajuda no console.
 
-utility Help
+to Help
 Exibe esta ajuda no console.
 
-utility FinishNearest [distance]
-Conclui a construção incompleta mais próxima dentro da distância informada.
+to Help [command]
+Exibe a sintaxe e a descrição detalhada de um comando específico.
+
+Exemplos:
+to Help Nearby
+to Help Cluster
+to Help FinishNearest
+to Help ClearArea
+to Help ClearPlants
+to Help Repair
+to Help SlowSleep
+
+to Nearby [distance]
+Lista os ItemIDs compatíveis encontrados ao redor do jogador, sem mover ou remover nenhum objeto.
+
+Somente os ItemIDs aceitos pelo comando Cluster são contabilizados.
+
+A distância padrão é de 10 metros.
 
 Exemplo:
-utility FinishNearest 10
+to Nearby 20
 
-utility ClearArea [distance]
+to FinishNearest [distance]
+Solicita ao jogo a conclusão da construção incompleta mais próxima dentro da distância informada.
+
+Exemplo:
+to FinishNearest 10
+
+to ClearArea [distance]
 Remove objetos compatíveis encontrados ao redor do jogador dentro da distância informada.
 
-Exemplo:
-utility ClearArea 10
+Itens removidos:
+Long_Stick, Stick, Small_Stick, Log, Stone, Big_Stone, Palm_Leaf, Banana_Leaf,
+Bamboo_Long_Stick, Bamboo_Stick, Bamboo_Log, Coconut_Green, Dry_leaf,
+Small_leaf_pile e Bone.
 
-utility ClearPlants [distance]
+Exemplo:
+to ClearArea 10
+
+to ClearPlants [distance]
 Remove plantas encontradas ao redor do jogador dentro da distância informada.
 
 Exemplo:
-utility ClearPlants 15
+to ClearPlants 15
 
-utility CollectNearby [ItemID] [distance] [pile|line]
+to Cluster [ItemID] [distance] [pile|line]
 Move para perto do jogador somente um tipo de item permitido.
 
 O modo pile é usado por padrão quando nenhum modo é informado.
 
 Exemplos:
-utility CollectNearby Stick 20
-utility CollectNearby Stick 20 pile
-utility CollectNearby Stick 20 line
+to Cluster Stick 20
+to Cluster Stick 20 pile
+to Cluster Stick 20 line
+
+to Repair
+Restaura para 100% a durabilidade da arma ou ferramenta que estiver equipada na mão do jogador.
+
+O comando afeta somente o item atualmente equipado. Ele não repara outros itens da mochila.
+
+Exemplo:
+to Repair
+
+to SlowSleep [on|off]
+Ativa ou desativa o sono lento quando não há outro jogador conectado.
+
+Quando ativado, dormir sozinho não avança oito horas rapidamente. A energia e os demais efeitos do sono progridem no mesmo ritmo lento usado quando outro jogador cooperativo permanece acordado.
+
+O recurso vem ativado por padrão e a opção escolhida fica salva.
+
+Exemplos:
+to SlowSleep on
+to SlowSleep off
 
 
-Safe ItemIDs:
+Main ItemIDs (loose physical resources):
 
 Long_Stick
 Stick
@@ -59,20 +108,24 @@ Bamboo_Long_Stick
 Bamboo_Stick
 Bamboo_Log
 Coconut_Green
-Dry_leaf
-Small_leaf_pile
-Liane
-Dryed_Liane
 mud_to_build
 mud_from_water
+Bone
+
+
+Experimental ItemIDs:
+
+These items are accepted for testing, but only move when they exist as loose objects on the ground.
+
+Dry_leaf
+Small_leaf_pile
 Rope
 Fiber
 Wood_Resin
 Charcoal
-Bone
 
 
-CollectNearby Modes:
+Cluster Modes:
 
 pile
 Organiza os objetos em uma pilha compacta com espaçamento ajustado para reduzir colisões físicas.
@@ -84,10 +137,11 @@ Organiza os objetos em linhas.
 Safety Notes:
 
 - A função all não existe neste mod.
-- CollectNearby exige um ItemID individual.
-- Somente os ItemIDs listados em Safe ItemIDs são aceitos.
+- Cluster exige um ItemID individual.
+- Somente os ItemIDs listados nas seções Main ItemIDs e Experimental ItemIDs são aceitos.
+- ItemIDs experimentais não têm movimentação garantida em todos os estados do objeto.
 - Outros ItemIDs do Green Hell são recusados, mesmo que existam no jogo.
-- CollectNearby move objetos existentes; não cria novos objetos.
+- Cluster move objetos existentes; não cria novos objetos.
 - Itens presos a construções, inventários ou sistemas especiais podem não ser movidos.
 - Quantidades muito grandes ainda podem causar queda de desempenho ou instabilidade física.
 - Os comandos não diferenciam letras maiúsculas de minúsculas.
