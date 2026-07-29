@@ -1,12 +1,13 @@
 {
   "name": "Utility",
   "author": "FraNerd",
-  "description": "Safe area collection, cleanup and construction utility commands for Green Hell.",
-  "version": "2.0.0",
+  "description": "Safe area inspection, collection, cleanup, construction, repair and sleep utility commands for Green Hell.",
+  "version": "1.3.0",
   "license": "GNU AGPLv3",
   "icon": "icon.png",
   "banner": "banner.jpg",
   "gameVersion": "1.0",
+  "updateUrl": "https://www.greenhellmodding.com/api/v1/mods/utility/version.txt",
   "isModPermanent": false,
   "excludedFiles": []
 }
