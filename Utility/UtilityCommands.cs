@@ -23,14 +23,12 @@ namespace UtilityMod {
             ItemID.Coconut_Green,
             ItemID.Dry_leaf,
             ItemID.Small_leaf_pile,
-            ItemID.Liane,
-            ItemID.Dryed_Liane
+            ItemID.Bone
         };
 
-        // Closed allow-list for CollectNearby. Even valid Green Hell ItemIDs are rejected
-        // unless explicitly included here, preventing unsafe movement of inventory,
-        // quest, equipped or construction-bound objects.
-        private static readonly HashSet<string> CollectNearbyAllowedIds =
+        // Main allow-list: loose physical resources that are realistic candidates
+        // for movement in the game world.
+        private static readonly HashSet<string> ClusterPrimaryIds =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
                 "Long_Stick",
                 "Stick",
@@ -44,17 +42,21 @@ namespace UtilityMod {
                 "Bamboo_Stick",
                 "Bamboo_Log",
                 "Coconut_Green",
-                "Dry_leaf",
-                "Small_leaf_pile",
-                "Liane",
-                "Dryed_Liane",
                 "mud_to_build",
                 "mud_from_water",
+                "Bone"
+            };
+
+        // These IDs exist and remain available for testing, but movement is only
+        // expected when the corresponding item is actually loose on the ground.
+        private static readonly HashSet<string> ClusterExperimentalIds =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+                "Dry_leaf",
+                "Small_leaf_pile",
                 "Rope",
                 "Fiber",
                 "Wood_Resin",
-                "Charcoal",
-                "Bone"
+                "Charcoal"
             };
 
         private static bool TryReadDistance(ArraySegment<string> args, float defaultDistance, out float distance) {
@@ -75,6 +77,50 @@ namespace UtilityMod {
             item.m_Info.m_DestroyByItemsManager = true;
             item.m_Info.m_CantDestroy = false;
             ItemsManager.Get().AddItemToDestroy(item);
+        }
+
+        // Repair
+        // Restores only the weapon or tool currently equipped in the player's hand.
+        public static void Repair(ArraySegment<string> args) {
+            if (args.Count > 0) {
+                LogMessage("Too many parameters. Use: to Repair");
+                return;
+            }
+
+            var backpack = InventoryBackpack.Get();
+            if (backpack == null) {
+                LogMessage("Player inventory is not available.");
+                return;
+            }
+
+            var item = backpack.m_EquippedItem;
+            if (item == null || item.m_Info == null) {
+                LogMessage("No weapon or tool is currently equipped.");
+                return;
+            }
+
+            var info = item.m_Info;
+            bool isRepairable =
+                info.IsAxe() ||
+                info.IsBow() ||
+                info.IsFishingRod() ||
+                info.IsKnife() ||
+                info.IsMachete() ||
+                info.IsTool() ||
+                info.IsWeapon();
+
+            if (!isRepairable || info.m_MaxHealth <= 0f) {
+                LogMessage($"The equipped item `{info.m_ID}` is not a repairable weapon or tool.");
+                return;
+            }
+
+            if (info.m_Health >= info.m_MaxHealth) {
+                LogMessage($"The equipped item `{info.m_ID}` is already at 100% durability.");
+                return;
+            }
+
+            info.m_Health = info.m_MaxHealth;
+            LogMessage($"Repaired equipped item `{info.m_ID}` to 100% durability.");
         }
 
         // FinishNearest [maxDistance(Default=10)]
@@ -111,8 +157,10 @@ namespace UtilityMod {
                 return;
             }
 
-            nearest.m_CurrentStep = nearest.m_Steps.Count;
-            LogMessage($"Nearest construction completed at distance {nearestDistance:0.00} meters.");
+            // Move beyond every normal construction step. The game's own
+            // ConstructionGhost.UpdateState() will process the completion.
+            nearest.m_CurrentStep = 999;
+            LogMessage($"Completion requested for the nearest construction at distance {nearestDistance:0.00} meters.");
         }
 
         // ClearArea [maxDistance(Default=10)]
@@ -188,6 +236,62 @@ namespace UtilityMod {
             }
 
             LogMessage($"ClearPlants removed {found.Count} removable plant objects within {maxDistance} meters.");
+        }
+
+        // Nearby [maxDistance(Default=10)]
+        // Read-only scan of the same ItemIDs accepted by Cluster.
+        public static void Nearby(ArraySegment<string> args) {
+            if (args.Count > 1) {
+                LogMessage("Too many parameters. Use: to Nearby [distance]");
+                return;
+            }
+
+            if (!TryReadDistance(args, 10f, out float maxDistance)) {
+                return;
+            }
+
+            var player = Player.Get();
+            if (player == null) {
+                LogMessage("Player is not available.");
+                return;
+            }
+
+            var playerPosition = player.GetWorldPosition();
+            var counts = new SortedDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            int totalCount = 0;
+
+            foreach (var item in Item.s_AllItems) {
+                if (item == null || item.m_Info == null) {
+                    continue;
+                }
+
+                string itemName = item.m_Info.m_ID.ToString();
+                if (!ClusterPrimaryIds.Contains(itemName) &&
+                    !ClusterExperimentalIds.Contains(itemName)) {
+                    continue;
+                }
+
+                if (Vector3.Distance(playerPosition, item.transform.position) > maxDistance) {
+                    continue;
+                }
+
+                if (counts.ContainsKey(itemName)) {
+                    counts[itemName]++;
+                } else {
+                    counts[itemName] = 1;
+                }
+                totalCount++;
+            }
+
+            if (counts.Count == 0) {
+                LogMessage($"Nearby found no supported loose resource items within {maxDistance} meters.");
+                return;
+            }
+
+            LogMessage($"Nearby found {totalCount} supported loose resource items within {maxDistance} meters:");
+            foreach (var entry in counts) {
+                LogMessage($"{entry.Key}: {entry.Value}");
+            }
         }
 
         private static void MoveLooseItem(Item item, Vector3 targetPosition) {
@@ -275,17 +379,17 @@ namespace UtilityMod {
             return horizontal + Vector3.up * (0.35f + layer * layerHeight);
         }
 
-        // CollectNearby [ItemID] [maxDistance(Default=10)] [pile/line]
-        // Only IDs in CollectNearbyAllowedIds are accepted.
+        // Cluster [ItemID] [maxDistance(Default=10)] [pile/line]
+        // Only IDs in the primary and experimental allow-lists are accepted.
         // Examples:
-        // CollectNearby Stick 20              -> safe compact pile (default)
-        // CollectNearby Stick 20 pile         -> safe compact pile
-        // CollectNearby Stick 20 line         -> previous grid/line behavior
-        public static void CollectNearby(ArraySegment<string> args) {
+        // Cluster Stick 20              -> safe compact pile (default)
+        // Cluster Stick 20 pile         -> safe compact pile
+        // Cluster Stick 20 line         -> previous grid/line behavior
+        public static void Cluster(ArraySegment<string> args) {
             const float defaultDistance = 10f;
 
             if (args.Count < 1 || string.IsNullOrWhiteSpace(args[0])) {
-                LogMessage("ItemID is required. Example: utility CollectNearby Stick 20");
+                LogMessage("ItemID is required. Example: to Cluster Stick 20");
                 return;
             }
 
@@ -295,14 +399,20 @@ namespace UtilityMod {
             }
 
             if (!args[0].ParseEnum(out ItemID requestedItemId)) {
-                LogMessage($"ItemID `{args[0]}` does not exist. Example: utility CollectNearby Stick 20");
+                LogMessage($"ItemID `{args[0]}` does not exist. Example: to Cluster Stick 20");
                 return;
             }
 
             string requestedName = requestedItemId.ToString();
-            if (!CollectNearbyAllowedIds.Contains(requestedName)) {
-                LogMessage($"ItemID `{requestedName}` is not allowed by CollectNearby for safety.");
+            bool isPrimary = ClusterPrimaryIds.Contains(requestedName);
+            bool isExperimental = ClusterExperimentalIds.Contains(requestedName);
+            if (!isPrimary && !isExperimental) {
+                LogMessage($"ItemID `{requestedName}` is not allowed by Cluster for safety.");
                 return;
+            }
+
+            if (isExperimental) {
+                LogMessage($"ItemID `{requestedName}` is experimental and will only move if it exists as a loose item on the ground.");
             }
 
             float maxDistance = defaultDistance;
@@ -318,7 +428,7 @@ namespace UtilityMod {
             }
 
             if (args.Count > 3) {
-                LogMessage("Too many parameters. Use: utility CollectNearby [ItemID] [distance] [pile/line]");
+                LogMessage("Too many parameters. Use: to Cluster [ItemID] [distance] [pile/line]");
                 return;
             }
 
@@ -361,7 +471,7 @@ namespace UtilityMod {
                 MoveLooseItem(item, target);
             }
 
-            LogMessage($"CollectNearby moved {found.Count} x {requestedName} in `{mode}` mode from within {maxDistance} meters.");
+            LogMessage($"Cluster moved {found.Count} x {requestedName} in `{mode}` mode from within {maxDistance} meters.");
         }
     }
 }
