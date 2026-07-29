@@ -39,6 +39,7 @@
     <Compile Include="Utility.cs" />
     <Compile Include="UtilityCommands.cs" />
     <Compile Include="UtilityExtensions.cs" />
+    <Compile Include="UtilitySlowSleep.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
